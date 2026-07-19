@@ -140,9 +140,56 @@ def cmd_index(args):
     print(f"  Sources: {stats['sources']}, Models: {stats['models']}")
 
 def cmd_mcp(args):
-    """Start MCP server for AI Agent access."""
     from .mcp.server import main as mcp_main
     mcp_main()
+
+def cmd_graph(args):
+    mem_db.init()
+    mem_db.build_relations()
+    stats = mem_db.get_stats()
+    print(f"Artifact Memory Graph")
+    print(f"  {stats['total']} assets, {stats['sources']} sources, {stats['models']} models")
+    print()
+    results = mem_db.list_all(30)
+    for r in results:
+        rels = mem_db.get_related(r["id"], 3)
+        rel_str = ", ".join([f"{rel['relation']} → {rel['file'][:20]}" for rel in rels]) if rels else "(no relations)"
+        print(f"  [{r['id']}] {r['file']:25s} | {r['source']:10s} | {rel_str}")
+
+def cmd_related(args):
+    mem_db.init()
+    aid = args.artifact_id
+    results = mem_db.get_related(aid)
+    if not results:
+        print(f"No relations found for artifact #{aid}.")
+        return
+    print(f"Relations for artifact #{aid}:")
+    for r in results:
+        print(f"  [{r['id']}] {r['file']:25s} | {r['relation']:15s} | {r['confidence']:.1f} | {r['model'][:25]} | {r['source']}")
+
+def cmd_history(args):
+    mem_db.init()
+    aid = args.artifact_id
+    data = mem_db.get_history(aid)
+    if not data:
+        print(f"Artifact #{aid} not found.")
+        return
+    a = data["artifact"]
+    print(f"Artifact #{aid}: {a['file']}")
+    print(f"  Source:   {a['source']}")
+    print(f"  Model:    {a['model']}")
+    print(f"  Prompt:   {a['prompt'][:60]}")
+    print(f"  Seed:     {a['seed']}")
+    print(f"  Steps:    {a['steps']} | CFG: {a['cfg']} | Sampler: {a['sampler']}")
+    print(f"  Scanned:  {a['scanned']}")
+    if data["nodes"]:
+        print(f"\n  Workflow Nodes:")
+        for n in data["nodes"]:
+            print(f"    → {n['type']}")
+    if data["related"]:
+        print(f"\n  Related Assets:")
+        for r in data["related"]:
+            print(f"    [{r['id']}] {r['file']:25s} | {r['relation']:15s} | {r['model'][:25]}")
 
 def cmd_mem_search(args):
     """Search indexed artifacts."""
@@ -189,6 +236,11 @@ def main():
     p_s.add_argument("--limit", type=int, default=20)
     p_l = sub.add_parser("list", help="List all indexed artifacts")
     p_l.add_argument("--limit", type=int, default=100)
+    sub.add_parser("graph", help="Show artifact relationship graph")
+    p_rel = sub.add_parser("related", help="Find related artifacts")
+    p_rel.add_argument("artifact_id", type=int, help="Artifact ID")
+    p_h = sub.add_parser("history", help="Show creation history of an artifact")
+    p_h.add_argument("artifact_id", type=int, help="Artifact ID")
     args = parser.parse_args()
     if args.command == "inspect":
         cmd_inspect(args)
@@ -204,6 +256,12 @@ def main():
         cmd_mem_list(args)
     elif args.command == "mcp":
         cmd_mcp(args)
+    elif args.command == "graph":
+        cmd_graph(args)
+    elif args.command == "related":
+        cmd_related(args)
+    elif args.command == "history":
+        cmd_history(args)
 
 if __name__ == "__main__":
     main()
