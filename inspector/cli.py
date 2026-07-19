@@ -143,6 +143,45 @@ def cmd_mcp(args):
     from .mcp.server import main as mcp_main
     mcp_main()
 
+def cmd_explore(args):
+    """Launch the Artifact Explorer web UI."""
+    from .explorer.server import main as explorer_main
+    explorer_main(port=args.port)
+
+def cmd_benchmark(args):
+    """Run parser benchmark against a directory of images."""
+    import glob, time
+    root = args.directory
+    if not os.path.isdir(root):
+        print(f"Error: directory not found: {root}", file=sys.stderr)
+        sys.exit(1)
+    pngs = sorted(glob.glob(root + '/**/*.png', recursive=True))
+    if not pngs:
+        print("No PNG files found.")
+        return
+    total = len(pngs)
+    ok = {'comfyui': 0, 'model': 0, 'prompt': 0, 'seed': 0, 'sampler': 0}
+    for fp in pngs:
+        try:
+            r = registry.parse(fp)
+            if r and r.source_tool:
+                ok['comfyui'] += 1
+                if r.generation:
+                    if r.generation.model: ok['model'] += 1
+                    if r.generation.prompt: ok['prompt'] += 1
+                    if r.generation.seed > 0: ok['seed'] += 1
+                    if r.generation.sampler: ok['sampler'] += 1
+        except:
+            pass
+    print(f"\nParser Benchmark: {total} images")
+    print(f"{'='*40}")
+    for k in ['comfyui', 'model', 'prompt', 'seed', 'sampler']:
+        pct = int(ok[k] / total * 100)
+        bar = '#' * (pct // 5) + '-' * (20 - pct // 5)
+        print(f"  {k:10s} {ok[k]:4d}/{total} ({pct:2d}%) |{bar}|")
+    print(f"\nReport: {total} files, {ok['comfyui']} detected, {(total-ok['comfyui'])} failed")
+    return ok
+
 def cmd_graph(args):
     mem_db.init()
     mem_db.build_relations()
@@ -229,6 +268,10 @@ def main():
     s.add_argument("-o", "--output", default=None, help="Output path for JSON report")
     sub.add_parser("parsers", help="List registered parsers")
     sub.add_parser("mcp", help="Start MCP server for AI Agent access")
+    p_exp = sub.add_parser("explore", help="Launch Artifact Explorer web UI")
+    p_exp.add_argument("--port", type=int, default=8765, help="Web server port")
+    p_bench = sub.add_parser("benchmark", help="Run parser benchmark against a directory of images")
+    p_bench.add_argument("directory", help="Directory of AI-generated PNG images")
     p_idx = sub.add_parser("index", help="Index images into Artifact Memory")
     p_idx.add_argument("directory", help="Directory of AI-generated images")
     p_s = sub.add_parser("search", help="Search indexed artifacts")
@@ -256,6 +299,10 @@ def main():
         cmd_mem_list(args)
     elif args.command == "mcp":
         cmd_mcp(args)
+    elif args.command == "explore":
+        cmd_explore(args)
+    elif args.command == "benchmark":
+        cmd_benchmark(args)
     elif args.command == "graph":
         cmd_graph(args)
     elif args.command == "related":

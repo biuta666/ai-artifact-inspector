@@ -70,16 +70,19 @@ def _parse_comfyui_workflow(workflow_json):
     if not isinstance(workflow, dict):
         return gen
 
-    # Model: CheckpointLoaderSimple, CheckpointLoader, UNETLoader, ImageOnlyCheckpointLoader
+    # Model: CheckpointLoaderSimple, CheckpointLoader, UNETLoader, ImageOnlyCheckpointLoader, unCLIP
     model_names = _node_scan(workflow, "CheckpointLoaderSimple", "ckpt_name")
     model_names += _node_scan(workflow, "CheckpointLoader", "ckpt_name")
     model_names += _node_scan(workflow, "UNETLoader", "unet_name")
     model_names += _node_scan(workflow, "ImageOnlyCheckpointLoader", "ckpt_name")
+    model_names += _node_scan(workflow, "unCLIPCheckpointLoader", "ckpt_name")
     if model_names:
         gen.model = os.path.splitext(str(model_names[0]))[0]
 
-    # Prompt
-    prompts = _node_scan(workflow, "CLIPTextEncode", "text")
+    # Prompt: CLIPTextEncode, Qwen, StableZero123
+    prompts = [p for p in _node_scan(workflow, "CLIPTextEncode", "text") if p and len(p) > 2]
+    prompts += [p for p in _node_scan(workflow, "TextEncodeQwenImageEdit", "prompt") if p and len(p) > 2]
+    prompts += [p for p in _node_scan(workflow, "TextEncodeQwenImageEditPlus", "prompt") if p and len(p) > 2]
     if prompts:
         gen.prompt = prompts[0]
 
