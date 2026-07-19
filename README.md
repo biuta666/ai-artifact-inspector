@@ -46,20 +46,34 @@ PNG → Parser → Schema → Graph → Memory Core → MCP → AI Agent
 
 The chain turns a single image file into structured, queryable, Agent-accessible knowledge.
 
-## Benchmark (1000 Images)
+## Benchmark
+
+### Real-World Parser Accuracy
+
+Tested against the official ComfyUI example repository — 100 real images covering SDXL, Flux, SD3, ControlNet, and LoRA workflows.
 
 | Metric | Result |
 |--------|--------|
-| Parse success rate | 1000/1000 (0 errors) |
+| ComfyUI detected | 100/100 (100%) |
+| Model extracted | 91/100 (91%) |
+| Prompt extracted | 83/100 (83%) |
+| Seed extracted | 87/100 (87%) |
+| Sampler extracted | 92/100 (92%) |
+| Workflow JSON found | 92/100 (92%) |
+| Unique models detected | 49 |
+| Hard errors | 0 |
+
+### Index & Search Performance (1000 Images)
+
+| Metric | Result |
+|--------|--------|
 | Index speed | 20s for 1000 files (20ms/file) |
 | Search speed | ~50ms (SQLite LIKE) |
 | Auto-generated relations | 222,850 edges |
-| Workflow nodes extracted | 7,011 |
 | Database size | 23MB (23KB per artifact) |
-| Model diversity | 8 unique models |
 | Memory usage | < 500MB during indexing |
 
-Tested with 1000 synthetic AI-generated PNGs carrying real ComfyUI workflow metadata (checkpoint, prompt, seed, LoRA, sampler). All parsing, indexing, and relation-building runs locally with zero external dependencies.
+All parsing, indexing, and relation-building runs locally with zero external dependencies.
 
 ## MCP Tools (for AI Agents)
 

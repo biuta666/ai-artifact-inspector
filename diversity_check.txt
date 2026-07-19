@@ -1,0 +1,8 @@
+Total real PNGs: 100
+
+Model family distribution:
+  sd15_xl        : 67 images
+  sd3            : 27 images
+  flux           : 27 images
+  controlnet     : 10 images
+  lora           : 5 images
