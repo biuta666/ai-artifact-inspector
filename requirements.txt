@@ -1,0 +1,2 @@
+# No external dependencies required.
+# All parsing uses Python standard library (struct, json, os, pathlib).
