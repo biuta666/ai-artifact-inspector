@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Administrator\CodeBuddy\20260624013437\ai-artifact-inspector\inspector\cli.py", line 5, in <module>
+    from .graph import generate as graph_generate
+ImportError: cannot import name 'generate' from 'inspector.graph' (C:\Users\Administrator\CodeBuddy\20260624013437\ai-artifact-inspector\inspector\graph\__init__.py)

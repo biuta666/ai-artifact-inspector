@@ -2,7 +2,7 @@ import sys, json, os
 from . import __version__
 from .parser import registry
 from .parsers import png
-from .graph import generate as graph_generate
+from .graph import generate as graph_generate, build_from_artifact
 
 def cmd_inspect(args):
     path = args.path
@@ -18,8 +18,13 @@ def cmd_inspect(args):
         print(json.dumps(data, indent=2, ensure_ascii=False))
         return
     if args.graph:
+        info = build_from_artifact(result)
         svg = graph_generate(result.workflow_json or "{}")
         print(svg)
+        return
+    if args.schema:
+        info = build_from_artifact(result)
+        print(json.dumps(info.to_dict(), indent=2, ensure_ascii=False))
         return
     _print_report(data)
 
@@ -115,6 +120,7 @@ def main():
     p.add_argument("-v", "--verbose", action="store_true")
     p.add_argument("--json", action="store_true", help="Output as JSON")
     p.add_argument("--graph", action="store_true", help="Output workflow as SVG diagram")
+    p.add_argument("--schema", action="store_true", help="Output Universal Artifact Schema as JSON")
     s = sub.add_parser("scan", help="Batch scan a directory of files")
     s.add_argument("directory", help="Directory to scan")
     s.add_argument("--json", action="store_true", help="Export results as JSON")
