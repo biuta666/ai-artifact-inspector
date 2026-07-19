@@ -3,6 +3,7 @@ from . import __version__
 from .parser import registry
 from .parsers import png
 from .graph import generate as graph_generate, build_from_artifact
+from .memory import database as mem_db
 
 def cmd_inspect(args):
     path = args.path
@@ -110,6 +111,55 @@ def cmd_parsers(_args):
     for p in parsers:
         print(f"  - {p['name']}")
 
+def cmd_index(args):
+    """Scan and index a directory of images into Artifact Memory."""
+    root = args.directory
+    if not os.path.isdir(root):
+        print(f"Error: directory not found: {root}", file=sys.stderr)
+        sys.exit(1)
+    mem_db.init()
+    count = 0
+    total = sum(1 for _, _, fs in os.walk(root) for f in fs if f.lower().endswith('.png'))
+    for dirpath, _, files in os.walk(root):
+        for f in files:
+            if not f.lower().endswith('.png'):
+                continue
+            fp = os.path.join(dirpath, f)
+            try:
+                result = registry.parse(fp)
+                if result and result.source_tool:
+                    aid = mem_db.save(result, fp)
+                    if aid:
+                        count += 1
+            except Exception:
+                pass
+            if count % 10 == 0 and count > 0:
+                print(f"  Indexed: {count}/{total}", flush=True)
+    stats = mem_db.get_stats()
+    print(f"  Done: {count} files indexed")
+    print(f"  Sources: {stats['sources']}, Models: {stats['models']}")
+
+def cmd_mem_search(args):
+    """Search indexed artifacts."""
+    mem_db.init()
+    results = mem_db.search(args.query, limit=args.limit)
+    if not results:
+        print("No matching artifacts found.")
+        return
+    print(f"Found {len(results)} artifacts:")
+    for r in results:
+        print(f"  [{r['id']}] {r['file']} | {r['source']} | {r['model']} | {r['prompt'][:50]}")
+
+def cmd_mem_list(args):
+    """List all indexed artifacts."""
+    mem_db.init()
+    stats = mem_db.get_stats()
+    print(f"Artifact Memory: {stats['total']} assets, {stats['sources']} sources, {stats['models']} models")
+    print()
+    results = mem_db.list_all(limit=args.limit)
+    for r in results:
+        print(f"  [{r['id']}] {r['file']:30s} {r['source']:10s} {r['model'][:25]:25s} {r['scanned']}")
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(prog="artifact", description="AI Artifact Inspector")
@@ -126,6 +176,13 @@ def main():
     s.add_argument("--json", action="store_true", help="Export results as JSON")
     s.add_argument("-o", "--output", default=None, help="Output path for JSON report")
     sub.add_parser("parsers", help="List registered parsers")
+    p_idx = sub.add_parser("index", help="Index images into Artifact Memory")
+    p_idx.add_argument("directory", help="Directory of AI-generated images")
+    p_s = sub.add_parser("search", help="Search indexed artifacts")
+    p_s.add_argument("query", help="Search query")
+    p_s.add_argument("--limit", type=int, default=20)
+    p_l = sub.add_parser("list", help="List all indexed artifacts")
+    p_l.add_argument("--limit", type=int, default=100)
     args = parser.parse_args()
     if args.command == "inspect":
         cmd_inspect(args)
@@ -133,6 +190,12 @@ def main():
         cmd_scan(args)
     elif args.command == "parsers":
         cmd_parsers(args)
+    elif args.command == "index":
+        cmd_index(args)
+    elif args.command == "search":
+        cmd_mem_search(args)
+    elif args.command == "list":
+        cmd_mem_list(args)
 
 if __name__ == "__main__":
     main()
