@@ -15,6 +15,12 @@ def init():
     c.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_source ON artifacts(source)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_model ON artifacts(model)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_artifacts_prompt ON artifacts(prompt)")
+    # Migration: add new columns if missing
+    for col in ["tags TEXT DEFAULT ''", "embedding_id TEXT DEFAULT ''", "artifact_type TEXT DEFAULT 'image'"]:
+        try:
+            c.execute(f"ALTER TABLE artifacts ADD COLUMN {col}")
+        except sqlite3.OperationalError:
+            pass
     conn.commit()
     return conn
 

@@ -139,6 +139,11 @@ def cmd_index(args):
     print(f"  Done: {count} files indexed")
     print(f"  Sources: {stats['sources']}, Models: {stats['models']}")
 
+def cmd_mcp(args):
+    """Start MCP server for AI Agent access."""
+    from .mcp.server import main as mcp_main
+    mcp_main()
+
 def cmd_mem_search(args):
     """Search indexed artifacts."""
     mem_db.init()
@@ -176,6 +181,7 @@ def main():
     s.add_argument("--json", action="store_true", help="Export results as JSON")
     s.add_argument("-o", "--output", default=None, help="Output path for JSON report")
     sub.add_parser("parsers", help="List registered parsers")
+    sub.add_parser("mcp", help="Start MCP server for AI Agent access")
     p_idx = sub.add_parser("index", help="Index images into Artifact Memory")
     p_idx.add_argument("directory", help="Directory of AI-generated images")
     p_s = sub.add_parser("search", help="Search indexed artifacts")
@@ -196,6 +202,8 @@ def main():
         cmd_mem_search(args)
     elif args.command == "list":
         cmd_mem_list(args)
+    elif args.command == "mcp":
+        cmd_mcp(args)
 
 if __name__ == "__main__":
     main()
