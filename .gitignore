@@ -12,3 +12,5 @@ Thumbs.db
 venv/
 artifact_memory.db
 *.db
+test_1000/
+gen_1000.py
