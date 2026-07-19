@@ -1,122 +1,86 @@
 # AI Artifact Inspector
 
-> **Understand any AI-generated file. Reveal its full production pipeline.**
+> **Give AI agents memory of your creative assets.**
 
 ![CI](https://github.com/biuta666/ai-artifact-inspector/actions/workflows/test.yml/badge.svg)
 
-Drop in any AI-generated image → instantly see the model, prompt, seed, LoRA, and workflow behind it.
+A local-first artifact memory layer for AI-generated images and workflows.
 
-```bash
-pip install ai-artifact-inspector
-artifact inspect samples/comfyui_cyberpunk.png
-```
-
-## Demo
-
-```
-$ artifact inspect samples/comfyui_cyberpunk.png
-
-File:     samples/comfyui_cyberpunk.png
-Type:     image
-Source:   ComfyUI
-Parser:   PNG Metadata Parser
-Size:     1,101 bytes
-
-Generation:
-  Model:   sd_xl_base_1.0
-  Prompt:  a cyberpunk girl in rain, neon lights, 8k
-  Neg:     ugly, blurry, low quality
-  Seed:    1234567890
-  Steps:   20
-  CFG:     7.0
-  Sampler: euler
-```
-
-No cloud. No upload. Your files stay local.
-
-## Workflow Visualization
-
-Visualize the node graph from any ComfyUI PNG:
-
-```bash
-artifact inspect samples/comfyui/001.png --graph
-```
-
-Outputs an SVG diagram showing the full node chain — checkpoint → CLIP encoding → KSampler → LoRA → output.
-
-## Why
-
-Every day, millions of AI-generated images are created. The **know-how** behind each image is trapped inside the file — in PNG metadata chunks, ComfyUI workflow JSON, and binary blobs.
-
-**AI Artifact Inspector** extracts this knowledge:
-
-- **Creators** → recover past prompts, models, and settings
-- **Learners** → understand how a specific effect was achieved
-- **Teams** → audit and archive production assets
+Parse any AI-generated image → extract its DNA → index into searchable memory → let AI agents query it.
 
 ## Quick Start
 
 ```bash
-# Install
-pip install ai-artifact-inspector
+# Parse a single image
+artifact inspect generated_image.png
 
-# Try it with the sample
-artifact inspect samples/comfyui_cyberpunk.png
+# Visualize its workflow graph
+artifact inspect generated_image.png --graph
 
-# Visualize the workflow graph
-artifact inspect samples/comfyui/001.png --graph
+# Index your entire collection into artifact memory
+artifact index ./ai_outputs/
 
-# Batch scan your entire collection
-artifact scan ~/images/
+# Search by model, prompt, or source
+artifact search "cyberpunk neon"
 
-# Full JSON output
-artifact inspect your_image.png --json
+# Start MCP server for Claude/Cursor/Continue
+artifact mcp
 ```
 
-## Supported Formats
+## What It Does
 
-| Format | Status | Details |
-|--------|--------|---------|
-| ComfyUI PNG | ✅ | Full workflow, nodes, prompts, model, LoRA |
-| AUTOMATIC1111 PNG | ✅ | Prompt, negative, seed, model, params |
-| Midjourney | 📅 | Prompt, style, version |
-| DALL-E | 📅 | Metadata extraction |
-| AI Video | 📅 | Frame-by-frame analysis |
-| 3D Models | 📅 | Generation parameters |
+| Layer | Capability | Status |
+|-------|-----------|--------|
+| **Parse** | Read model, prompt, seed, LoRA from PNG | ✅ |
+| **Graph** | Visualize the complete workflow as SVG | ✅ |
+| **Memory** | SQLite database, index/search/archive | ✅ |
+| **MCP** | 5 tools for any MCP-compatible AI Agent | ✅ |
+| **Understand** | Semantic understanding (Qwen) | 📅 v0.4 |
+| **Doctor** | Quality diagnosis and optimization | 📅 v0.5 |
 
 ## Architecture
 
 ```
-Any AI File → Parser Router → [PNG | MJ | Video ...] → Artifact Model → CLI / JSON
+PNG → Parser → Schema → Graph → Memory Core → MCP → AI Agent
 ```
 
-The system is designed to be extended. Each format gets its own parser implementing a simple interface.
+The chain turns a single image file into structured, queryable, Agent-accessible knowledge.
 
-## Extending
+## MCP Tools (for AI Agents)
 
-Add a new parser in 3 steps:
+Start the server:
 
-```python
-from inspector.parser import BaseParser, register
-from inspector.models import Artifact
+```bash
+artifact mcp
+```
 
-@register
-class MyParser(BaseParser):
-    def name(self):
-        return "My Format Parser"
+Then Claude Desktop, Cursor, or Continue can call:
 
-    def can_parse(self, path):
-        return path.endswith(".myfmt")
+| Tool | Agent Says | Agent Gets |
+|------|-----------|------------|
+| `search_artifacts` | "Find my cyberpunk characters" | Matching assets with model/prompt/seed |
+| `get_artifact` | "How was this one made?" | Full generation DNA |
+| `get_workflow` | "Show me the node graph" | SVG workflow visualization |
+| `similar_assets` | "Find more like this" | Similar style matches |
+| `collection_stats` | "What do I have?" | Asset count by source/model |
 
-    def parse(self, path):
-        return Artifact(...)
+## Install
+
+```bash
+pip install ai-artifact-inspector
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/biuta666/ai-artifact-inspector
+cd ai-artifact-inspector
+pip install -e .
 ```
 
 ## Development
 
 ```bash
-git clone https://github.com/biuta666/ai-artifact-inspector
-cd ai-artifact-inspector
 pip install -e .
 pip install pytest
 python -m pytest tests/
@@ -125,3 +89,5 @@ python -m pytest tests/
 ## License
 
 MIT
+
+*No cloud. No upload. Your files stay local.*
