@@ -2,6 +2,7 @@ import sys, json, os
 from . import __version__
 from .parser import registry
 from .parsers import png
+from .graph import generate as graph_generate
 
 def cmd_inspect(args):
     path = args.path
@@ -15,6 +16,10 @@ def cmd_inspect(args):
     data = result.to_dict()
     if args.json:
         print(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+    if args.graph:
+        svg = graph_generate(result.workflow_json or "{}")
+        print(svg)
         return
     _print_report(data)
 
@@ -109,6 +114,7 @@ def main():
     p.add_argument("path", help="Path to the file")
     p.add_argument("-v", "--verbose", action="store_true")
     p.add_argument("--json", action="store_true", help="Output as JSON")
+    p.add_argument("--graph", action="store_true", help="Output workflow as SVG diagram")
     s = sub.add_parser("scan", help="Batch scan a directory of files")
     s.add_argument("directory", help="Directory to scan")
     s.add_argument("--json", action="store_true", help="Export results as JSON")

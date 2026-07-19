@@ -2,16 +2,18 @@
 
 > **Understand any AI-generated file. Reveal its full production pipeline.**
 
+![CI](https://github.com/biuta666/ai-artifact-inspector/actions/workflows/test.yml/badge.svg)
+
 Drop in any AI-generated image → instantly see the model, prompt, seed, LoRA, and workflow behind it.
 
-\\\ash
+```bash
 pip install ai-artifact-inspector
 artifact inspect samples/comfyui_cyberpunk.png
-\\\
+```
 
 ## Demo
 
-\\\
+```
 $ artifact inspect samples/comfyui_cyberpunk.png
 
 File:     samples/comfyui_cyberpunk.png
@@ -28,9 +30,19 @@ Generation:
   Steps:   20
   CFG:     7.0
   Sampler: euler
+```
 
 No cloud. No upload. Your files stay local.
-\\\
+
+## Workflow Visualization
+
+Visualize the node graph from any ComfyUI PNG:
+
+```bash
+artifact inspect samples/comfyui/001.png --graph
+```
+
+Outputs an SVG diagram showing the full node chain — checkpoint → CLIP encoding → KSampler → LoRA → output.
 
 ## Why
 
@@ -44,19 +56,22 @@ Every day, millions of AI-generated images are created. The **know-how** behind 
 
 ## Quick Start
 
-\\\ash
+```bash
 # Install
 pip install ai-artifact-inspector
 
 # Try it with the sample
 artifact inspect samples/comfyui_cyberpunk.png
 
-# Inspect your own files
-artifact inspect your_image.png
+# Visualize the workflow graph
+artifact inspect samples/comfyui/001.png --graph
+
+# Batch scan your entire collection
+artifact scan ~/images/
 
 # Full JSON output
-artifact inspect your_image.png --verbose
-\\\
+artifact inspect your_image.png --json
+```
 
 ## Supported Formats
 
@@ -71,9 +86,9 @@ artifact inspect your_image.png --verbose
 
 ## Architecture
 
-\\\
+```
 Any AI File → Parser Router → [PNG | MJ | Video ...] → Artifact Model → CLI / JSON
-\\\
+```
 
 The system is designed to be extended. Each format gets its own parser implementing a simple interface.
 
@@ -81,7 +96,7 @@ The system is designed to be extended. Each format gets its own parser implement
 
 Add a new parser in 3 steps:
 
-\\\python
+```python
 from inspector.parser import BaseParser, register
 from inspector.models import Artifact
 
@@ -95,17 +110,17 @@ class MyParser(BaseParser):
 
     def parse(self, path):
         return Artifact(...)
-\\\
+```
 
 ## Development
 
-\\\ash
+```bash
 git clone https://github.com/biuta666/ai-artifact-inspector
 cd ai-artifact-inspector
 pip install -e .
 pip install pytest
 python -m pytest tests/
-\\\
+```
 
 ## License
 
